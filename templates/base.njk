@@ -2,7 +2,7 @@
   <head>
     <title>{% block title %}{% endblock %} - JakeArchibald.com</title>
     <meta name="viewport" content="width=device-width, minimum-scale=1.0">
-    <link rel="stylesheet" href="/static/css/all.css">
+    <link rel="stylesheet" href="/{{ 'static/css/all.css'|rev }}">
     {% block extra_head %}{% endblock %}
   </head>
   <body>

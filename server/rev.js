@@ -3,38 +3,50 @@ const path = require('path');
 const util = require('util');
 const crypto = require('crypto');
 
-const chokidar = require('chokidar');
+const rename = util.promisify(fs.rename);
+
+const glob = util.promisify(require('glob'));
 const mkdirp = require('mkdirp');
-const del = require('del');
+const through2 = require('through2');
 
 const hashes = new Map();
 
-function revCopyWatch(cwd, from, to) {
-  const watcher = chokidar.watch(from, {
-    ignored: /(^|[\/\\])\../,
-    cwd
+module.exports.copy = async function copy(cwd, from, to) {
+  const paths = await glob(from, {
+    cwd,
+    nodir: true
   });
 
-  async function processPath(p) {
-    const parsedPath = path.parse(p);
-    const parsedOutputPath = {
-      dir: to + parsedPath.dir.slice(from.length),
-      name: parsedPath.name,
-      ext: parsedPath.ext
-    };
+  await Promise.all(
+    paths.map(async p => {
+      const parsedPath = path.parse(p);
+      const parsedOutputPath = {
+        base: parsedPath.dir ? `${to}/${parsedPath.dir}` : to,
+        name: parsedPath.name,
+        ext: parsedPath.ext
+      };
 
-    const hash = crypto.createHash('md5');
-    const input = fs.createReadStream(`${cwd}/${p}`);
-    await mkdirp(`${cwd}/${parsedOutputPath.dir}`);
-    const output = fs.createWriteStream(`${cwd}/${parsedOutputPath.dir}/${parsedOutputPath.name}${parsedOutputPath.ext}`);
+      const hash = crypto.createHash('md5');
+      const input = fs.createReadStream(`${cwd}/${p}`);
+      const initialOutputPath = path.format(parsedOutputPath);
 
-    input.pipe(output);
-  }
+      await mkdirp(parsedOutputPath.base);
 
-  watcher.on('add', processPath);
-  watcher.on('change', processPath);
+      await new Promise(resolve => {
+        input.pipe(through2((chunk, enc, callback) => {
+          hash.update(chunk);
+          callback(null, chunk);
+        })).pipe(fs.createWriteStream(initialOutputPath)).on('finish', resolve);
+      });
+
+      parsedOutputPath.ext = '.' + hash.digest('hex').toString(16).slice(0, 10) + parsedOutputPath.ext;
+      const finalPath = path.format(parsedOutputPath);
+      hashes.set(p, finalPath);
+      await rename(initialOutputPath, finalPath);
+    })
+  );
 }
 
-del(`${__dirname}/../static-rev`).then(() => {
-  revCopyWatch(path.normalize(`${__dirname}/..`), 'static/', `static-rev/`);
-});
+module.exports.get = function get(key) {
+  return hashes.get(key);
+};
