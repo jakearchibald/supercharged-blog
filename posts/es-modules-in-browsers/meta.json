@@ -1,0 +1,6 @@
+{
+  "title": "ECMAScript modules in browsers",
+  "posted": "2017-05-02",
+  "summary": "ES modules are starting to land in browsers! Modules in general are [pretty well documented](https://ponyfoo.com/articles/es6-modules-in-depth), but here are some browser-specific differences…",
+  "description": "ES modules are landing in browsers! Here are the HTML-specific differences you need to be aware of."
+}

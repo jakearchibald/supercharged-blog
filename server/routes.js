@@ -1,0 +1,76 @@
+const util = require('util');
+const fs = require('fs');
+
+const readFile = util.promisify(fs.readFile);
+const readdir = util.promisify(fs.readdir);
+const stat = util.promisify(fs.stat);
+const marked = require('./marked');
+const Error404 = require('./error404');
+const express = require('express');
+const wrap = fn => (...args) => fn(...args).catch(args[2]);
+const readFileOr404 = (...args) => readFile(...args).catch(err => {
+  if (err.code == 'ENOENT') throw new Error404;
+  throw err;
+});
+
+const router = express.Router({ strict: true });
+
+router.use('/static/', express.static(__dirname + '/../static'));
+router.use('/favicon.ico', express.static(__dirname + '/../static/favicon.ico'));
+
+router.use((req, res, next) => {
+  // Set default caching headers
+  res.set('Cache-Control', 'no-cache');
+  next();
+});
+
+router.get('/', wrap(async(req, res) => {
+  const dir = `${__dirname}/../posts`;
+  const slugs = await readdir(dir);
+
+  const posts = (await Promise.all(
+    slugs.map(async slug => {
+      const itemDir = `${dir}/${slug}`;
+      if (!(await stat(itemDir)).isDirectory()) return null;
+
+      const meta = JSON.parse(await readFile(`${itemDir}/meta.json`, 'utf-8'));
+
+      return Object.assign({}, meta, {
+        slug,
+        summary: marked(meta.summary)
+      });
+    })
+  )).filter(i => i).sort((a, b) => a.posted > b.posted ? -1 : 1);
+
+  res.render('index', {posts});
+}));
+
+router.get('/who/', (req, res) => res.render('who'));
+
+router.get('/:year(\\d{4})/:slug/', wrap(async (req, res) => {
+  const dir = `${__dirname}/../posts/${req.params.slug}`;
+  const contentPromise = readFileOr404(`${dir}/content.md`, 'utf-8');
+  const meta = JSON.parse(await readFileOr404(`${dir}/meta.json`, 'utf-8'));
+
+  if (new Date(meta.posted).getFullYear() != Number(req.params.year)) {
+    throw new Error404();
+  }
+
+  res.render('post', {
+    meta,
+    year: req.params.year,
+    slug: req.params.slug,
+    content: marked(await contentPromise)
+  });
+}));
+
+// Handle errors
+router.use((err, req, res, next) => {
+  if (!(err instanceof Error404)) {
+    next(err)
+    return;
+  }
+  res.status(404).render('404');
+});
+
+module.exports = router;

@@ -1,0 +1,10 @@
+{% extends 'base.njk' %}
+
+{% block content %}
+  <div class="content-n-side">
+    <div class="content">
+      {% block mainContent %}{% endblock %}
+    </div>
+    <div class="side">{% include 'who-inc.njk' %}</div>
+  </div>
+{% endblock %}

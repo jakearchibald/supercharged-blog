@@ -1,0 +1,22 @@
+{% extends 'base-side.njk' %}
+
+{% block title %}Blog{% endblock %}
+{% block page_class %}blog-index{% endblock %}
+{% block author_action %} wrote...{% endblock %}
+
+{% block mainContent %}
+  {% for post in posts %}
+    <article class="post-preview{% if loop.first %} first{% endif %}">
+      <header class="preview-header width-padding">
+        <h1 class="h-2"><a href="/{{post.posted | date('YYYY')}}/{{post.slug}}/">{{ post.title }}</a></h1>
+        <time class="article-date" datetime="{{ post.posted | date('YYYY-MM-DD') }}">
+          Posted {{ post.posted | date("D MMM YYYY") }}
+        </time>
+      </header>
+      <div class="article-content">
+        {{ post.summary|safe }}
+        <p><a href="/{{post.posted | date('YYYY')}}/{{post.slug}}/">Read on…</a></p>
+      </div>
+    </article>
+  {% endfor %}
+{% endblock %}

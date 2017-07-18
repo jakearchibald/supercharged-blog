@@ -1,0 +1,22 @@
+{% extends 'base-side.njk' %}
+
+{% block title %}{{ meta.title }}{% endblock %}
+{% block author_action %} wrote...{% endblock %}
+{% block extra_head %}
+  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://jakearchibald.com/static/imgs/icon.png">
+  <meta name="twitter:site" content="@jaffathecake">
+  <meta property="og:url" content="https://jakearchibald.com/{{year}}/{{slug}}">
+  <meta property="og:title" content="{{ meta.title }}">
+  <meta property="og:description" content="{{ meta.metaSummary }}">
+{% endblock %}
+
+{% block mainContent %}
+  <div class="article-content">
+    <h1>{{ meta.title }}</h1>
+    <time class="article-date" datetime="{{ meta.posted | date('YYYY-MM-DD') }}">
+      Posted {{ meta.posted | date("D MMM YYYY") }}
+    </time>
+    {{ content|safe }}
+  </div>
+{% endblock %}
