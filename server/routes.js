@@ -1,5 +1,6 @@
 const util = require('util');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const staticModule = require('static-module');
 const readFile = util.promisify(fs.readFile);
@@ -35,11 +36,17 @@ router.get('/sw.js', (req, res) => {
     '/static/css/imgs/social-icons.png'
   ].map(u => rev.get(u));
 
+  const hash = crypto.createHash('md5');
+  for (const url in toCache) hash.update(url);
+
+  const version = hash.digest('hex').slice(0, 10);
+
   res.set('Content-Type', 'application/javascript');
   input.pipe(
     staticModule({
       'static-to-cache': () => JSON.stringify(toCache, null, '  '),
-      'static-rev-get': u => JSON.stringify(rev.get(u))
+      'static-rev-get': u => JSON.stringify(rev.get(u)),
+      'static-version': () => JSON.stringify(version)
     })
   ).pipe(res);
 });
