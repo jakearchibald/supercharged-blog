@@ -74,7 +74,7 @@ router.get('/', wrap(async(req, res) => {
 
 router.get('/who/', (req, res) => res.render('who'));
 
-router.get('/:year(\\d{4})/:slug/', wrap(async (req, res) => {
+router.get('/:year(\\d{4})/:slug/:include(include)?', wrap(async (req, res) => {
   const dir = `${__dirname}/../posts/${req.params.slug}`;
   const contentPromise = readFileOr404(`${dir}/content.md`, 'utf-8');
   const meta = JSON.parse(await readFileOr404(`${dir}/meta.json`, 'utf-8'));
@@ -83,7 +83,9 @@ router.get('/:year(\\d{4})/:slug/', wrap(async (req, res) => {
     throw new Error404();
   }
 
-  res.render('post', {
+  const template = req.params.include ? 'post-inc' : 'post';
+
+  res.render(template, {
     meta,
     year: req.params.year,
     slug: req.params.slug,

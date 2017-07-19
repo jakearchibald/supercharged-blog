@@ -12,11 +12,5 @@
 {% endblock %}
 
 {% block mainContent %}
-  <div class="article-content">
-    <h1>{{ meta.title }}</h1>
-    <time class="article-date" datetime="{{ meta.posted | date('YYYY-MM-DD') }}">
-      Posted {{ meta.posted | date("D MMM YYYY") }}
-    </time>
-    {{ content|safe }}
-  </div>
+  {% include 'post-inc.njk' %}
 {% endblock %}
