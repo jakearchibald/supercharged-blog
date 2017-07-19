@@ -16,11 +16,11 @@ const readFileOr404 = (...args) => readFile(...args).catch(err => {
 
 const router = express.Router({ strict: true });
 
-router.use('/static-rev', express.static(__dirname + '/../static-rev'));
-router.use('/favicon.ico', express.static(__dirname + '/../static/favicon.ico'));
+router.use('/static-rev', express.static(__dirname + '/../static-rev', { maxAge: '1y' }));
+router.use('/favicon.ico', express.static(__dirname + '/../static/favicon.ico', { maxAge: '1y' }));
 
+// Set default caching headers
 router.use((req, res, next) => {
-  // Set default caching headers
   res.set('Cache-Control', 'no-cache');
   next();
 });
