@@ -528,11 +528,6 @@ Ok ok, I jest, but the above actually works. You can't push assets for *any orig
 
 If you look at the certificate for developers.google.com, you can see it's authoritative for all sorts of Google origins, including android.com.
 
-<figure class="full-figure">
-<div class="video"><iframe src="//www.youtube.com/embed/i9uXp64KUcw?rel=0&amp;html5=1" frameborder="0" allowfullscreen=""></iframe></div>
-<figcaption>Viewing certificate information in Chrome</figcaption>
-</figure>
-
 Now, I lied a little, because when we fetch android.com it'll perform a DNS lookup and see that it terminates at a different IP to developers.google.com, so it'll set up a new connection and miss our item in the push cache.
 
 We could work around this using an [ORIGIN frame](http://httpwg.org/http-extensions/origin-frame.html). This lets the connection say "Hey, if you need anything from android.com, just ask me. No need to do any of that DNS stuff", as long as it's authoritative. This is useful for general connection coalescing, but it's pretty new and only supported in Firefox Nightly.
