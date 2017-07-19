@@ -63,7 +63,9 @@ module.exports.addAndRev = async function addAndRev(p, destination, content) {
     crypto.createHash('md5').update(content)
   );
 
-  const outputPath = `${parsedPath.dir}/${parsedPath.name}${newExtension}`;
+  let outputPath = `${parsedPath.name}${newExtension}`;
+  if (parsedPath.dir) outputPath = `${parsedPath.dir}/` + outputPath;
+
   hashes.set(`/static/${p}`, `/static-rev/${outputPath}`);
   await writeFile(`${destination}/${outputPath}`, content);
 };
