@@ -14,7 +14,7 @@ const readFileOr404 = (...args) => readFile(...args).catch(err => {
   throw err;
 });
 
-const router = express.Router({ strict: true });
+const router = express.Router();
 
 router.use('/static-rev', express.static(__dirname + '/../static-rev', { maxAge: '1y' }));
 router.use('/favicon.ico', express.static(__dirname + '/../static/favicon.ico', { maxAge: '1y' }));
