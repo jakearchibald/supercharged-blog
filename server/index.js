@@ -22,7 +22,7 @@ app.use(require('./routes'));
   const staticRevPath = `${__dirname}/../static-rev`;
   await del(staticRevPath);
   await rev.copyAndRev(`${__dirname}/../static`, '**', staticRevPath);
-  await rev.replace(`${__dirname}/../static-rev/**/*.css`);
+  await rev.replaceInFiles(`${__dirname}/../static-rev/**/*.css`);
 
   app.listen(3000, () => {
     console.log('Example app listening on port 3000!');

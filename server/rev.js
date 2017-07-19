@@ -68,22 +68,27 @@ module.exports.addAndRev = async function addAndRev(p, destination, content) {
   await writeFile(`${destination}/${outputPath}`, content);
 };
 
-module.exports.replace = async function replace(inGlob) {
-  const re = new RegExp(
-    [...hashes.keys()].map(s => escapeStringRegexp(s)).join('|'),
-    'g'
-  );
-
+module.exports.replaceInFiles = async function replaceInFiles(inGlob) {
   const paths = await glob(inGlob, { nodir: true });
 
   await Promise.all(
     paths.map(async p => {
       const content = await readFile(p, 'utf8');
-      const replacedContent = content.replace(re, match => hashes.get(match));
-      await writeFile(p, replacedContent);
+      await writeFile(p, replace(content));
     })
   );
 };
+
+function replace(content) {
+  const re = new RegExp(
+    [...hashes.keys()].map(s => escapeStringRegexp(s)).join('|'),
+    'g'
+  );
+
+  return content.replace(re, match => hashes.get(match));
+};
+
+module.exports.replace = replace;
 
 module.exports.get = function get(key) {
   return hashes.get(key);

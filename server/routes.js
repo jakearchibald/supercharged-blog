@@ -5,6 +5,7 @@ const readFile = util.promisify(fs.readFile);
 const readdir = util.promisify(fs.readdir);
 const stat = util.promisify(fs.stat);
 const marked = require('./marked');
+const rev = require('./rev');
 const Error404 = require('./error404');
 const express = require('express');
 const wrap = fn => (...args) => fn(...args).catch(args[2]);
@@ -60,7 +61,7 @@ router.get('/:year(\\d{4})/:slug/', wrap(async (req, res) => {
     meta,
     year: req.params.year,
     slug: req.params.slug,
-    content: marked(await contentPromise)
+    content: rev.replace(marked(await contentPromise))
   });
 }));
 
