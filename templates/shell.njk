@@ -1,7 +1,17 @@
 {% extends 'base-side.njk' %}
 {% block title %}Loading{% endblock %}
-{% block author_action %} streamed…{% endblock %}
+{% block author_action %} app shell'd…{% endblock %}
 
 {% block mainContent %}
-  <!-- content go here -->
+  <script>
+    (async function() {
+      const thisScript = document.currentScript;
+      const includeUrl = new URL(location);
+      includeUrl.pathname += 'include';
+      const response = await fetch(includeUrl);
+      const range = document.createRange();
+      range.selectNode(document.body);
+      thisScript.parentNode.append(range.createContextualFragment(await response.text()));
+    })();
+  </script>
 {% endblock %}

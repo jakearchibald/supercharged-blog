@@ -31,8 +31,7 @@ router.get('/sw.js', (req, res) => {
   const input = fs.createReadStream(`${__dirname}/../client/sw.js`);
   const toCache = [
     '/static/offline-inc.html',
-    '/static/shell-start.html',
-    '/static/shell-end.html',
+    '/static/shell.html',
     '/static/css/all.css',
     '/static/imgs/me.jpg',
     '/static/css/imgs/social-icons.png'
