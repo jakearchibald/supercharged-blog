@@ -24,8 +24,60 @@ addEventListener('activate', event => {
   }());
 });
 
+class IdentityStream {
+  constructor() {
+    let readableController;
+    let writableController;
+
+    this.readable = new ReadableStream({
+      start(controller) {
+        readableController = controller;
+      },
+      cancel(reason) {
+        writableController.error(reason);
+      }
+    });
+
+    this.writable = new WritableStream({
+      start(controller) {
+        writableController = controller;
+      },
+      write(chunk) {
+        readableController.enqueue(chunk);
+      },
+      close() {
+        readableController.close();
+      },
+      abort(reason) {
+        readableController.error(reason);
+      }
+    });
+  }
+}
+
 async function streamArticle(event, url) {
-  return new Response('This is an article');
+  const includeUrl = new URL(url);
+  includeUrl.pathname += 'include';
+
+  const parts = [
+    caches.match(revGet('/static/shell-start.html')),
+    fetch(includeUrl),
+    caches.match(revGet('/static/shell-end.html'))
+  ];
+
+  const identity = new IdentityStream();
+
+  event.waitUntil(async function() {
+    for (const responsePromise of parts) {
+      const response = await responsePromise;
+      await response.body.pipeTo(identity.writable, { preventClose: true });
+    }
+    identity.writable.getWriter().close();
+  }());
+
+  return new Response(identity.readable, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+  });
 }
 
 addEventListener('fetch', event => {
