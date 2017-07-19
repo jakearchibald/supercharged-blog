@@ -1,6 +1,7 @@
 const util = require('util');
 const fs = require('fs');
 
+const staticModule = require('static-module');
 const readFile = util.promisify(fs.readFile);
 const readdir = util.promisify(fs.readdir);
 const stat = util.promisify(fs.stat);
@@ -27,9 +28,20 @@ router.use((req, res, next) => {
 
 router.get('/sw.js', (req, res) => {
   const input = fs.createReadStream(`${__dirname}/../client/sw.js`);
+  const toCache = [
+    '/static/offline.html',
+    '/static/css/all.css',
+    '/static/imgs/me.jpg',
+    '/static/css/imgs/social-icons.png'
+  ].map(u => rev.get(u));
 
   res.set('Content-Type', 'application/javascript');
-  input.pipe(res);
+  input.pipe(
+    staticModule({
+      'static-to-cache': () => JSON.stringify(toCache, null, '  '),
+      'static-rev-get': u => JSON.stringify(rev.get(u))
+    })
+  ).pipe(res);
 });
 
 router.get('/', wrap(async(req, res) => {
