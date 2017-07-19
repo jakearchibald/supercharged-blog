@@ -61,7 +61,7 @@ async function streamArticle(event, url) {
 
   const parts = [
     caches.match(revGet('/static/shell-start.html')),
-    fetch(includeUrl),
+    fetch(includeUrl).catch(() => caches.match(revGet('/static/offline-inc.html'))),
     caches.match(revGet('/static/shell-end.html'))
   ];
 
@@ -92,11 +92,6 @@ addEventListener('fetch', event => {
     const cachedReponse = await caches.match(event.request);
     if (cachedReponse) return cachedReponse;
 
-    try {
-      return await fetch(event.request);
-    }
-    catch (err) {
-      return caches.match(revGet('/static/offline.html'));
-    }
+    return await fetch(event.request);
   }());
 });
