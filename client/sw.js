@@ -24,8 +24,19 @@ addEventListener('activate', event => {
   }());
 });
 
+async function streamArticle(event, url) {
+  return new Response('This is an article');
+}
+
 addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+
   event.respondWith(async function () {
+    if (url.origin === location.origin && /^\/\d{4}\/[\w-]+\/$/.test(url.pathname)) {
+      return streamArticle(event, url);
+    }
+
     const cachedReponse = await caches.match(event.request);
     if (cachedReponse) return cachedReponse;
 
