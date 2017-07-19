@@ -427,11 +427,11 @@ svg {
 }
 
 .full-figure.checked {
-  background: url("imgs/check.png")
+  background: url("/static/css/imgs/check.png")
 }
 
 .full-figure.blueprint {
-  background: url("imgs/graph-tile.png"), radial-gradient(circle farthest-corner, #08d, #002b46) center;
+  background: url("/static/css/imgs/graph-tile.png"), radial-gradient(circle farthest-corner, #08d, #002b46) center;
   background-size: 12%, cover
 }
 
@@ -632,7 +632,7 @@ svg {
 .i-social {
   width: 16px;
   height: 16px;
-  background: url("imgs/social-icons.png") no-repeat;
+  background: url("/static/css/imgs/social-icons.png") no-repeat;
   background-size: 106px
 }
 

@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "del": "^3.0.0",
+    "escape-string-regexp": "^1.0.5",
     "express": "^4.15.3",
     "glob": "^7.1.2",
     "highlight.js": "^9.12.0",

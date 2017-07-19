@@ -4,14 +4,24 @@ const util = require('util');
 const crypto = require('crypto');
 
 const rename = util.promisify(fs.rename);
+const readFile = util.promisify(fs.readFile);
+const writeFile = util.promisify(fs.writeFile);
 
 const glob = util.promisify(require('glob'));
-const mkdirp = require('mkdirp');
+const mkdirp = util.promisify(require('mkdirp'));
 const through2 = require('through2');
+const escapeStringRegexp = require('escape-string-regexp');
 
 const hashes = new Map();
 
-module.exports.copy = async function copy(cwd, from, to) {
+function hashExtension(extension, hash) {
+  return '.' + hash.digest('hex').slice(0, 10) + extension;
+}
+
+module.exports.copyAndRev = async function copyAndRev(cwd, from, to) {
+  cwd = path.normalize(cwd);
+  to = path.normalize(to);
+
   const paths = await glob(from, {
     cwd,
     nodir: true
@@ -21,7 +31,7 @@ module.exports.copy = async function copy(cwd, from, to) {
     paths.map(async p => {
       const parsedPath = path.parse(p);
       const parsedOutputPath = {
-        base: parsedPath.dir ? `${to}/${parsedPath.dir}` : to,
+        dir: parsedPath.dir ? `${to}/${parsedPath.dir}` : to,
         name: parsedPath.name,
         ext: parsedPath.ext
       };
@@ -30,7 +40,7 @@ module.exports.copy = async function copy(cwd, from, to) {
       const input = fs.createReadStream(`${cwd}/${p}`);
       const initialOutputPath = path.format(parsedOutputPath);
 
-      await mkdirp(parsedOutputPath.base);
+      await mkdirp(parsedOutputPath.dir);
 
       await new Promise(resolve => {
         input.pipe(through2((chunk, enc, callback) => {
@@ -39,13 +49,41 @@ module.exports.copy = async function copy(cwd, from, to) {
         })).pipe(fs.createWriteStream(initialOutputPath)).on('finish', resolve);
       });
 
-      parsedOutputPath.ext = '.' + hash.digest('hex').toString(16).slice(0, 10) + parsedOutputPath.ext;
-      const finalPath = path.format(parsedOutputPath);
-      hashes.set(p, finalPath);
-      await rename(initialOutputPath, finalPath);
+      parsedOutputPath.ext = hashExtension(parsedOutputPath.ext, hash);
+
+      hashes.set(`/static/${p}`, `/static-rev/${parsedPath.dir}/${parsedOutputPath.name}${parsedOutputPath.ext}`);
+      await rename(initialOutputPath, path.format(parsedOutputPath));
     })
   );
 }
+
+module.exports.addAndRev = async function addAndRev(p, destination, content) {
+  const parsedPath = path.parse(p);
+  const newExtension = hashExtension(parsedPath.ext,
+    crypto.createHash('md5').update(content)
+  );
+
+  const outputPath = `${parsedPath.dir}/${parsedPath.name}${newExtension}`;
+  hashes.set(`/static/${p}`, `/static-rev/${outputPath}`);
+  await writeFile(`${destination}/${outputPath}`, content);
+};
+
+module.exports.replace = async function replace(inGlob) {
+  const re = new RegExp(
+    [...hashes.keys()].map(s => escapeStringRegexp(s)).join('|'),
+    'g'
+  );
+
+  const paths = await glob(inGlob, { nodir: true });
+
+  await Promise.all(
+    paths.map(async p => {
+      const content = await readFile(p, 'utf8');
+      const replacedContent = content.replace(re, match => hashes.get(match));
+      await writeFile(p, replacedContent);
+    })
+  );
+};
 
 module.exports.get = function get(key) {
   return hashes.get(key);
