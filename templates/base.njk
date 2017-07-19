@@ -17,5 +17,8 @@
       {% block content %}{% endblock %}
     </div>
     {% block extra_body %}{% endblock %}
+    <script>
+      navigator.serviceWorker.register('/sw.js');
+    </script>
   </body>
 </html>

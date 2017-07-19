@@ -25,6 +25,13 @@ router.use((req, res, next) => {
   next();
 });
 
+router.get('/sw.js', (req, res) => {
+  const input = fs.createReadStream(`${__dirname}/../client/sw.js`);
+
+  res.set('Content-Type', 'application/javascript');
+  input.pipe(res);
+});
+
 router.get('/', wrap(async(req, res) => {
   const dir = `${__dirname}/../posts`;
   const slugs = await readdir(dir);
