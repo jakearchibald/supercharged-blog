@@ -23,6 +23,12 @@ app.use(require('./routes'));
   await del(staticRevPath);
   await rev.copyAndRev(`${__dirname}/../static`, '**', staticRevPath);
   await rev.addAndRev('offline.html', staticRevPath, nunjucksEnv.render('offline.njk'));
+
+  const shell = nunjucksEnv.render('shell.njk');
+  const splitAt = '<!-- content go here -->';
+
+  await rev.addAndRev('shell-start.html', staticRevPath, shell.slice(0, shell.indexOf(splitAt)));
+  await rev.addAndRev('shell-end.html', staticRevPath, shell.slice(shell.indexOf(splitAt) + splitAt.length));
   await rev.replaceInFiles(`${__dirname}/../static-rev/**/*.css`);
 
   app.listen(3000, () => {
